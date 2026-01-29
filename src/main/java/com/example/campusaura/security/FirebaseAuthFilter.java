@@ -1,5 +1,7 @@
 package com.example.campusaura.security;
 
+import com.example.campusaura.model.entity.User;
+import com.example.campusaura.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
 import jakarta.servlet.FilterChain;
@@ -21,12 +23,18 @@ import java.util.List;
 
 /**
  * Firebase Authentication Filter that integrates with Spring Security.
- * Validates Firebase ID tokens and sets the authentication in SecurityContext.
+ * Validates Firebase ID tokens, syncs user to Firestore, and sets authentication in SecurityContext.
  */
 @Component
 public class FirebaseAuthFilter extends OncePerRequestFilter {
 
   private static final Logger logger = LoggerFactory.getLogger(FirebaseAuthFilter.class);
+
+  private final UserService userService;
+
+  public FirebaseAuthFilter(UserService userService) {
+    this.userService = userService;
+  }
 
   @Override
   protected void doFilterInternal(HttpServletRequest request,
@@ -42,17 +50,23 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
       try {
         FirebaseToken decodedToken = FirebaseAuth.getInstance().verifyIdToken(token);
 
-        // Create custom principal with user details
-        FirebasePrincipal principal = new FirebasePrincipal(
+        // Sync user to Firestore (create if first login, fetch if existing)
+        User user = userService.getOrCreateUser(
             decodedToken.getUid(),
             decodedToken.getEmail(),
-            decodedToken.getName(),
+            decodedToken.getName()
+        );
+
+        // Create custom principal with user details
+        FirebasePrincipal principal = new FirebasePrincipal(
+            user.getUid(),
+            user.getEmail(),
+            user.getName(),
             decodedToken.getClaims()
         );
 
-        // Extract role from Firebase custom claims (defaults to USER if not set)
-        // Future-ready for STUDENT, COORDINATOR, ADMIN roles
-        String role = principal.getRole();
+        // Use role from Firestore (source of truth for user data)
+        String role = user.getRole();
         List<SimpleGrantedAuthority> authorities = Collections.singletonList(
             new SimpleGrantedAuthority("ROLE_" + role)
         );
@@ -71,7 +85,7 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        logger.debug("Authenticated user: {} with role: {}", decodedToken.getUid(), role);
+        logger.debug("Authenticated user: {} with role: {}", user.getUid(), role);
 
       } catch (Exception e) {
         logger.error("Firebase token validation failed: {}", e.getMessage());

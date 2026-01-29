@@ -20,6 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Firebase Authentication Filter that integrates with Spring Security.
@@ -86,11 +87,28 @@ public class FirebaseAuthFilter extends OncePerRequestFilter {
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
         logger.debug("Authenticated user: {} with role: {}", user.getUid(), role);
+        // Set request attributes
+        request.setAttribute("uid", decodedToken.getUid());
+        request.setAttribute("email", decodedToken.getEmail());
+
+        // Create authentication token for Spring Security
+        UsernamePasswordAuthenticationToken authentication =
+            new UsernamePasswordAuthenticationToken(
+                decodedToken.getUid(),
+                null,
+                new ArrayList<>()
+            );
+        authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+
+        // Set authentication in Spring Security context
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
       } catch (Exception e) {
         logger.error("Firebase token validation failed: {}", e.getMessage());
         // Set status and let Spring Security handle the response
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+        response.getWriter().write("{\"error\": \"Unauthorized\", \"message\": \"Invalid or expired token\"}");
         return;
       }
     }

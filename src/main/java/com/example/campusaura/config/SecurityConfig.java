@@ -37,6 +37,9 @@ public class SecurityConfig {
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
             .requestMatchers("/api/public/**").permitAll()
+            .requestMatchers("/api/auth/validate-email").permitAll()
+            .requestMatchers("/api/auth/validate-registration").permitAll()
+            .requestMatchers("/api/auth/registration-info").permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(exception -> exception
@@ -59,10 +62,24 @@ public class SecurityConfig {
   @Bean
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
-    configuration.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://localhost:4200"));
-    configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+
+    // Allow your frontend URLs
+    configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost:5173"    // Vite frontend (your current frontend)
+    ));
+
+    // Allow all HTTP methods
+    configuration.setAllowedMethods(Arrays.asList(
+        "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
+    ));
+
+    // Allow all headers (including Authorization for Firebase tokens)
     configuration.setAllowedHeaders(List.of("*"));
+
+    // Allow credentials (cookies, authorization headers)
     configuration.setAllowCredentials(true);
+
+    // Cache preflight requests for 1 hour
     configuration.setMaxAge(3600L);
 
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

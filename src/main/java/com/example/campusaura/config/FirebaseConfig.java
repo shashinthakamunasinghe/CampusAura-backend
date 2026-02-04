@@ -16,7 +16,7 @@ import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 
 @Configuration
-@Profile("!test") // Don't load this config in test profile
+@ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class FirebaseConfig {
 
     @Value("${firebase.service-account-key}")

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  campusaura-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: campusaura-backend
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring Boot Configuration
+      - SPRING_PROFILES_ACTIVE=prod
+      - SERVER_PORT=8080
+      
+      # Firebase Configuration
+      - FIREBASE_SERVICE_ACCOUNT_KEY=/app/firebase-service-account.json
+      - FIREBASE_DATABASE_URL=https://campusaura-12c16.firebaseio.com
+      
+      # CORS Configuration (adjust for production)
+      - ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
+      
+    volumes:
+      # Optional: Mount firebase service account from host if not baked into image
+      # - ./src/main/resources/firebase-service-account.json:/app/firebase-service-account.json:ro
+      
+      # Optional: Persist logs
+      - ./logs:/app/logs
+      
+    networks:
+      - campusaura-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 40s
+
+networks:
+  campusaura-network:
+    driver: bridge

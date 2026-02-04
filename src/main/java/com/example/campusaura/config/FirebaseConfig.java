@@ -6,14 +6,17 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.Resource;
 
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 
 @Configuration
+@Profile("!test") // Don't load this config in test profile
 public class FirebaseConfig {
 
     @Value("${firebase.service-account-key}")
@@ -29,16 +32,21 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() throws IOException {
-        FirebaseOptions options = FirebaseOptions.builder()
-                .setCredentials(GoogleCredentials.fromStream(serviceAccountKey.getInputStream()))
-                .setDatabaseUrl(databaseUrl)
-                .build();
+        try {
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccountKey.getInputStream()))
+                    .setDatabaseUrl(databaseUrl)
+                    .build();
 
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseApp.initializeApp(options);
-            System.out.println("Firebase initialized successfully");
-        } else {
-            System.out.println("Firebase already initialized");
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+                System.out.println("Firebase initialized successfully");
+            } else {
+                System.out.println("Firebase already initialized");
+            }
+        } catch (IOException e) {
+            System.err.println("Failed to initialize Firebase: " + e.getMessage());
+            throw e;
         }
     }
 

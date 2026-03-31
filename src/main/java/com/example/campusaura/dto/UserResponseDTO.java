@@ -1,110 +1,47 @@
 package com.example.campusaura.dto;
 
-import com.example.campusaura.model.User;
-import java.time.LocalDateTime;
+import com.google.cloud.Timestamp;
 
+/**
+ * DTO for user data returned by the admin user management API.
+ * Maps from the real Firestore User entity fields.
+ */
 public class UserResponseDTO {
-    private String id;
-    private String firstName;
-    private String lastName;
+
+    private String uid;           // Firebase UID (document ID)
+    private String name;          // Display name
     private String email;
-    private String phoneNumber;
-    private User.UserType userType;
-    private User.VerificationStatus verificationStatus;
-    private String idImageUrl;
-    private String studentId;
-    private boolean active;
-    private LocalDateTime createdAt;
+    private String role;          // STUDENT, COORDINATOR, ADMIN, EXTERNAL_USER
+    private boolean verified;     // Student ID verified
+    private String degreeProgram; // For STUDENT role only
+    private String studentIdUrl;  // URL to uploaded student ID image
+    private Timestamp createdAt;
 
     // Constructors
     public UserResponseDTO() {}
 
     // Getters and Setters
-    public String getId() {
-        return id;
-    }
+    public String getUid() { return uid; }
+    public void setUid(String uid) { this.uid = uid; }
 
-    public void setId(String id) {
-        this.id = id;
-    }
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
-    public String getFirstName() {
-        return firstName;
-    }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
 
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
-    public String getLastName() {
-        return lastName;
-    }
+    public boolean isVerified() { return verified; }
+    public void setVerified(boolean verified) { this.verified = verified; }
 
-    public void setLastName(String lastName) {
-        this.lastName = lastName;
-    }
+    public String getDegreeProgram() { return degreeProgram; }
+    public void setDegreeProgram(String degreeProgram) { this.degreeProgram = degreeProgram; }
 
-    public String getEmail() {
-        return email;
-    }
+    public String getStudentIdUrl() { return studentIdUrl; }
+    public void setStudentIdUrl(String studentIdUrl) { this.studentIdUrl = studentIdUrl; }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
-
-    public User.UserType getUserType() {
-        return userType;
-    }
-
-    public void setUserType(User.UserType userType) {
-        this.userType = userType;
-    }
-
-    public User.VerificationStatus getVerificationStatus() {
-        return verificationStatus;
-    }
-
-    public void setVerificationStatus(User.VerificationStatus verificationStatus) {
-        this.verificationStatus = verificationStatus;
-    }
-
-    public String getIdImageUrl() {
-        return idImageUrl;
-    }
-
-    public void setIdImageUrl(String idImageUrl) {
-        this.idImageUrl = idImageUrl;
-    }
-
-    public String getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(String studentId) {
-        this.studentId = studentId;
-    }
-
-    public boolean isActive() {
-        return active;
-    }
-
-    public void setActive(boolean active) {
-        this.active = active;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
+    public Timestamp getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Timestamp createdAt) { this.createdAt = createdAt; }
 }

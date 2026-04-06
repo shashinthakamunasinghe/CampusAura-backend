@@ -12,15 +12,15 @@ COPY src ./src
 RUN mvn clean package -DskipTests -B
 
 # ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Install wget for healthcheck (not present in alpine by default)
-RUN apk add --no-cache wget
+# Install wget for healthcheck
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
 # Non-root user for security (required for Azure Container Apps)
-RUN addgroup -S campusaura && adduser -S campusaura -G campusaura
+RUN groupadd -r campusaura && useradd -r -g campusaura campusaura
 USER campusaura:campusaura
 
 # Copy JAR from build stage

@@ -9,18 +9,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.io.Resource;
 
 import jakarta.annotation.PostConstruct;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 @Configuration
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
 public class FirebaseConfig {
 
+    /**
+     * Supports two formats:
+     * - "classpath:firebase-service-account.json"  → local dev (from resources/)
+     * - "/run/secrets/firebase-key"                → Docker secret file path
+     */
     @Value("${firebase.service-account-key}")
-    private Resource serviceAccountKey;
+    private String serviceAccountKeyPath;
 
     @Value("${firebase.database-url}")
     private String databaseUrl;
@@ -32,9 +39,9 @@ public class FirebaseConfig {
 
     @PostConstruct
     public void initialize() throws IOException {
-        try {
+        try (InputStream stream = openServiceAccountStream()) {
             FirebaseOptions options = FirebaseOptions.builder()
-                    .setCredentials(GoogleCredentials.fromStream(serviceAccountKey.getInputStream()))
+                    .setCredentials(GoogleCredentials.fromStream(stream))
                     .setDatabaseUrl(databaseUrl)
                     .build();
 
@@ -50,5 +57,25 @@ public class FirebaseConfig {
         }
     }
 
-    
+    /**
+     * Opens the Firebase service account key from either:
+     * 1. A classpath resource (local dev): "classpath:firebase-service-account.json"
+     * 2. An absolute file path (Docker secret): "/run/secrets/firebase-key"
+     */
+    private InputStream openServiceAccountStream() throws IOException {
+        if (serviceAccountKeyPath.startsWith("classpath:")) {
+            String resourceName = serviceAccountKeyPath.substring("classpath:".length());
+            InputStream stream = getClass().getClassLoader().getResourceAsStream(resourceName);
+            if (stream == null) {
+                throw new IOException("Classpath resource not found: " + resourceName);
+            }
+            return stream;
+        } else {
+            // Absolute file path (Docker secret mounted at /run/secrets/)
+            if (!Files.exists(Paths.get(serviceAccountKeyPath))) {
+                throw new IOException("Firebase key file not found at: " + serviceAccountKeyPath);
+            }
+            return new FileInputStream(serviceAccountKeyPath);
+        }
+    }
 }

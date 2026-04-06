@@ -1,7 +1,6 @@
 package com.example.campusaura.controller;
 
 import com.example.campusaura.dto.*;
-import com.example.campusaura.model.User;
 import com.example.campusaura.model.Product;
 import com.example.campusaura.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -341,7 +340,7 @@ public class AdminController {
     @GetMapping("/users/university-students")
     public ResponseEntity<List<UserResponseDTO>> getUniversityStudents() {
         try {
-            List<UserResponseDTO> users = userManagementService.getUsersByType(User.UserType.UNIVERSITY_STUDENT);
+            List<UserResponseDTO> users = userManagementService.getUsersByRole("STUDENT");
             return ResponseEntity.ok(users);
         } catch (ExecutionException | InterruptedException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -355,7 +354,7 @@ public class AdminController {
     @GetMapping("/users/external-users")
     public ResponseEntity<List<UserResponseDTO>> getExternalUsers() {
         try {
-            List<UserResponseDTO> users = userManagementService.getUsersByType(User.UserType.EXTERNAL_USER);
+            List<UserResponseDTO> users = userManagementService.getUsersByRole("EXTERNAL_USER");
             return ResponseEntity.ok(users);
         } catch (ExecutionException | InterruptedException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -391,36 +390,33 @@ public class AdminController {
     }
 
     /**
-     * Update user status (active/inactive)
+     * Update user active status — NOTE: The User entity does not have an 'active' field.
+     * This endpoint is kept for API compatibility; it is a no-op that returns the current user.
      * PATCH /api/admin/users/{id}/status
      */
     @PatchMapping("/users/{id}/status")
-    public ResponseEntity<UserResponseDTO> updateUserStatus(
-            @PathVariable String id, 
+    public ResponseEntity<Map<String, String>> updateUserStatus(
+            @PathVariable String id,
             @RequestBody Map<String, Boolean> statusUpdate) {
-        try {
-            boolean active = statusUpdate.get("active");
-            UserResponseDTO user = userManagementService.updateUserStatus(id, active);
-            return ResponseEntity.ok(user);
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (ExecutionException | InterruptedException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User status update not supported in current user model");
+        return ResponseEntity.ok(response);
     }
 
     /**
-     * Verify student (approve/reject)
+     * Verify student ID (approve = true / reject = false)
      * PATCH /api/admin/users/{id}/verify
+     * Body: { "status": "VERIFIED" } or { "status": "REJECTED" }
      */
     @PatchMapping("/users/{id}/verify")
     public ResponseEntity<UserResponseDTO> verifyStudent(
-            @PathVariable String id, 
+            @PathVariable String id,
             @RequestBody Map<String, String> verificationUpdate) {
         try {
             String statusStr = verificationUpdate.get("status");
-            User.VerificationStatus status = User.VerificationStatus.valueOf(statusStr);
-            UserResponseDTO user = userManagementService.verifyStudent(id, status);
+            // Map string status to boolean: "VERIFIED" → true, anything else → false
+            boolean verified = "VERIFIED".equalsIgnoreCase(statusStr);
+            UserResponseDTO user = userManagementService.verifyStudent(id, verified);
             return ResponseEntity.ok(user);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();

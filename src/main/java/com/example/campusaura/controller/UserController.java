@@ -1,6 +1,6 @@
 package com.example.campusaura.controller;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

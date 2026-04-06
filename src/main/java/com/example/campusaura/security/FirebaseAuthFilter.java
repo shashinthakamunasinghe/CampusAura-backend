@@ -1,6 +1,6 @@
 package com.example.campusaura.security;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.service.UserService;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;

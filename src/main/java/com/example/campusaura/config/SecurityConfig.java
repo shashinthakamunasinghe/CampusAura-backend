@@ -45,6 +45,7 @@ public class SecurityConfig {
             .requestMatchers("/api/auth/validate-email").permitAll()
             .requestMatchers("/api/auth/validate-registration").permitAll()
             .requestMatchers("/api/auth/registration-info").permitAll()
+            .requestMatchers("/actuator/health").permitAll()
             .anyRequest().authenticated()
         )
         .exceptionHandling(exception -> exception
@@ -70,6 +71,8 @@ public class SecurityConfig {
 
     // Allow your frontend URLs
     configuration.setAllowedOrigins(Arrays.asList(
+        "http://localhost",         // Docker deployed frontend (Nginx on port 80)
+        "http://127.0.0.1",         // Localhost via IP
         "http://localhost:5173",    // Vite frontend (default port)
         "http://localhost:5174",    // Vite frontend (alternate port)
         "http://localhost:5175"     // Vite frontend (alternate port)

@@ -1,6 +1,6 @@
-package com.example.campusaura.repository.impl;
+package com.example.campusaura.repository;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.repository.UserRepository;
 import com.google.cloud.firestore.DocumentReference;
 import com.google.cloud.firestore.Firestore;

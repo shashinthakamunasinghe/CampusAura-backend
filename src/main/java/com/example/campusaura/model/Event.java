@@ -18,6 +18,10 @@ public class Event {
     private String createdAt;
     private String updatedAt;
     private String status;  // e.g., "DRAFT", "PUBLISHED", "COMPLETED", "CANCELLED"
+    private String category;  // e.g., "Technology", "Career", "Culture", "Sports"
+    private Integer attendeeCount;  // Number of people attending
+    private List<EventScheduleItem> schedule;  // Event schedule items
+    private EventAccountDetails accountDetails;  // Account details for the event
 
     public Event() {
     }
@@ -26,7 +30,8 @@ public class Event {
                  Boolean ticketsAvailable, List<TicketCategory> ticketCategories,
                  List<PastEventDetail> pastEventDetails, List<String> eventImageUrls,
                  List<SellItem> sellItems, String description, String organizingDepartment,
-                 String createdAt, String updatedAt, String status) {
+                 String createdAt, String updatedAt, String status, String category, Integer attendeeCount,
+                 List<EventScheduleItem> schedule, EventAccountDetails accountDetails) {
         this.eventId = eventId;
         this.coordinatorId = coordinatorId;
         this.title = title;
@@ -42,6 +47,10 @@ public class Event {
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
         this.status = status;
+        this.category = category;
+        this.attendeeCount = attendeeCount;
+        this.schedule = schedule;
+        this.accountDetails = accountDetails;
     }
 
     // Getters and Setters
@@ -163,5 +172,37 @@ public class Event {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public Integer getAttendeeCount() {
+        return attendeeCount;
+    }
+
+    public void setAttendeeCount(Integer attendeeCount) {
+        this.attendeeCount = attendeeCount;
+    }
+
+    public List<EventScheduleItem> getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(List<EventScheduleItem> schedule) {
+        this.schedule = schedule;
+    }
+
+    public EventAccountDetails getAccountDetails() {
+        return accountDetails;
+    }
+
+    public void setAccountDetails(EventAccountDetails accountDetails) {
+        this.accountDetails = accountDetails;
     }
 }

@@ -1,6 +1,11 @@
 package com.example.campusaura.dto;
 
 import com.example.campusaura.model.Event;
+import com.example.campusaura.model.TicketCategory;
+import com.example.campusaura.model.PastEventDetail;
+import com.example.campusaura.model.SellItem;
+
+import java.util.List;
 
 public class EventResponseDTO {
     private String eventId;
@@ -15,6 +20,10 @@ public class EventResponseDTO {
     private String createdAt;
     private String updatedAt;
     private String message;
+    private List<TicketCategory> ticketCategories;
+    private List<PastEventDetail> pastEventDetails;
+    private List<String> eventImageUrls;
+    private List<SellItem> sellItems;
 
     public EventResponseDTO() {
     }
@@ -131,5 +140,37 @@ public class EventResponseDTO {
 
     public void setMessage(String message) {
         this.message = message;
+    }
+
+    public List<TicketCategory> getTicketCategories() {
+        return ticketCategories;
+    }
+
+    public void setTicketCategories(List<TicketCategory> ticketCategories) {
+        this.ticketCategories = ticketCategories;
+    }
+
+    public List<PastEventDetail> getPastEventDetails() {
+        return pastEventDetails;
+    }
+
+    public void setPastEventDetails(List<PastEventDetail> pastEventDetails) {
+        this.pastEventDetails = pastEventDetails;
+    }
+
+    public List<String> getEventImageUrls() {
+        return eventImageUrls;
+    }
+
+    public void setEventImageUrls(List<String> eventImageUrls) {
+        this.eventImageUrls = eventImageUrls;
+    }
+
+    public List<SellItem> getSellItems() {
+        return sellItems;
+    }
+
+    public void setSellItems(List<SellItem> sellItems) {
+        this.sellItems = sellItems;
     }
 }

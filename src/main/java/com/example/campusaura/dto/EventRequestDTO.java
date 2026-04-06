@@ -1,5 +1,7 @@
 package com.example.campusaura.dto;
 
+import com.example.campusaura.model.EventAccountDetails;
+import com.example.campusaura.model.EventScheduleItem;
 import com.example.campusaura.model.PastEventDetail;
 import com.example.campusaura.model.SellItem;
 import com.example.campusaura.model.TicketCategory;
@@ -18,6 +20,9 @@ public class EventRequestDTO {
     private String description;
     private String organizingDepartment;
     private String status;
+    private String category;
+    private List<EventScheduleItem> schedule;
+    private EventAccountDetails accountDetails;
 
     public EventRequestDTO() {
     }
@@ -25,7 +30,8 @@ public class EventRequestDTO {
     public EventRequestDTO(String title, String venue, String dateTime, Boolean ticketsAvailable,
                            List<TicketCategory> ticketCategories, List<PastEventDetail> pastEventDetails,
                            List<String> eventImageUrls, List<SellItem> sellItems, String description,
-                           String organizingDepartment, String status) {
+                           String organizingDepartment, String status, String category,
+                           List<EventScheduleItem> schedule, EventAccountDetails accountDetails) {
         this.title = title;
         this.venue = venue;
         this.dateTime = dateTime;
@@ -37,6 +43,9 @@ public class EventRequestDTO {
         this.description = description;
         this.organizingDepartment = organizingDepartment;
         this.status = status;
+        this.category = category;
+        this.schedule = schedule;
+        this.accountDetails = accountDetails;
     }
 
     // Getters and Setters
@@ -126,5 +135,29 @@ public class EventRequestDTO {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getCategory() {
+        return category;
+    }
+
+    public void setCategory(String category) {
+        this.category = category;
+    }
+
+    public List<EventScheduleItem> getSchedule() {
+        return schedule;
+    }
+
+    public void setSchedule(List<EventScheduleItem> schedule) {
+        this.schedule = schedule;
+    }
+
+    public EventAccountDetails getAccountDetails() {
+        return accountDetails;
+    }
+
+    public void setAccountDetails(EventAccountDetails accountDetails) {
+        this.accountDetails = accountDetails;
     }
 }

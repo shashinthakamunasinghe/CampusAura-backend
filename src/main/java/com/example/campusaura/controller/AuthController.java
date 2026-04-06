@@ -2,7 +2,7 @@ package com.example.campusaura.controller;
 
 import com.example.campusaura.dto.ExternalUserRegistrationRequest;
 import com.example.campusaura.dto.StudentRegistrationRequest;
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.security.Roles;
 import com.example.campusaura.service.UserService;
 import com.example.campusaura.util.EmailValidator;

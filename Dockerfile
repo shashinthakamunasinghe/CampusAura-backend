@@ -1,44 +1,39 @@
-# Multi-stage Dockerfile for CampusAura Backend
-# Stage 1: Build the application
+# ─── Stage 1: Build ──────────────────────────────────────────────────────────
 FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 WORKDIR /app
 
-# Copy pom.xml and download dependencies (cached layer)
+# Cache dependencies before copying source (faster rebuilds)
 COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Copy source code
+# Copy source and build JAR (skip tests — run them in CI)
 COPY src ./src
+RUN mvn clean package -DskipTests -B
 
-# Build the application (skip tests for faster builds)
-RUN mvn clean package -DskipTests
-
-# Stage 2: Run the application
-FROM eclipse-temurin:17-jre-alpine
+# ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
+FROM eclipse-temurin:17-jre-jammy
 
 WORKDIR /app
 
-# Create non-root user for security
-RUN addgroup -S spring && adduser -S spring -G spring
-USER spring:spring
+# Install wget for healthcheck
+RUN apt-get update && apt-get install -y wget && rm -rf /var/lib/apt/lists/*
 
-# Copy the built JAR from build stage
-COPY --from=build /app/target/*.jar app.jar
+# Non-root user for security (required for Azure Container Apps)
+RUN groupadd -r campusaura && useradd -r -g campusaura campusaura
+USER campusaura:campusaura
 
-# Copy Firebase service account file
-COPY --chown=spring:spring src/main/resources/firebase-service-account.json /app/firebase-service-account.json
+# Copy JAR from build stage
+COPY --from=build --chown=campusaura:campusaura /app/target/*.jar app.jar
 
-# Expose port 8080
+# Port 8080 (default Spring Boot)
 EXPOSE 8080
 
-# Environment variables (can be overridden at runtime)
-ENV SPRING_PROFILES_ACTIVE=prod
-ENV FIREBASE_SERVICE_ACCOUNT_KEY=/app/firebase-service-account.json
+# JVM tuning for containers (prevents OOM in cloud environments)
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:InitialRAMPercentage=50.0"
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+# Health check — needs wget (installed above)
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-# Run the application
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

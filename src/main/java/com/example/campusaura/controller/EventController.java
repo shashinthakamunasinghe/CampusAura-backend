@@ -1,7 +1,9 @@
 package com.example.campusaura.controller;
 
+import com.example.campusaura.dto.EventDetailDTO;
 import com.example.campusaura.dto.EventRequestDTO;
 import com.example.campusaura.dto.EventResponseDTO;
+import com.example.campusaura.dto.LandingPageEventDTO;
 import com.example.campusaura.model.Event;
 import com.example.campusaura.service.EventService;
 import com.google.firebase.auth.FirebaseAuth;
@@ -127,6 +129,102 @@ public class EventController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("Failed to retrieve your events: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get random ongoing events for landing page (PUBLIC - no authentication required)
+     * GET /api/events/landing-page
+     * @param limit Optional query parameter to specify number of events (default: 10, max: 20)
+     */
+    @GetMapping("/landing-page")
+    public ResponseEntity<?> getLandingPageEvents(@RequestParam(defaultValue = "10") int limit) {
+        try {
+            // Enforce maximum limit of 20 events
+            int effectiveLimit = Math.min(limit, 20);
+            List<LandingPageEventDTO> events = eventService.getRandomOngoingEvents(effectiveLimit);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to retrieve landing page events: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get latest 3 events for landing page (PUBLIC - no authentication required)
+     * GET /api/events/latest
+     */
+    @GetMapping("/latest")
+    public ResponseEntity<?> getLatestEvents() {
+        try {
+            // Get 3 latest published/ongoing events
+            List<LandingPageEventDTO> events = eventService.getLatestEvents(3);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to retrieve latest events: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get latest events for landing page with optional limit (PUBLIC - no authentication required)
+     * GET /api/events/public/latest?limit=3
+     */
+    @GetMapping("/public/latest")
+    public ResponseEntity<?> getPublicLatestEvents(
+            @RequestParam(defaultValue = "3") int limit) {
+        try {
+            // Get latest published/ongoing events with specified limit
+            List<LandingPageEventDTO> events = eventService.getLatestEvents(limit);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to retrieve latest events: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get all published events for public events page (PUBLIC - no authentication required)
+     * GET /api/events/public?category=Technology&sortBy=upcoming
+     * @param category - Filter by category (All, Technology, Career, Culture, Sports). Default: All
+     * @param sortBy - Sort order (upcoming, latest, popular). Default: upcoming
+     */
+    @GetMapping("/public")
+    public ResponseEntity<?> getPublicEvents(
+            @RequestParam(required = false, defaultValue = "All") String category,
+            @RequestParam(required = false, defaultValue = "upcoming") String sortBy) {
+        try {
+            // Get all published events with filtering and sorting
+            List<LandingPageEventDTO> events = eventService.getPublicEvents(category, sortBy);
+            return ResponseEntity.ok(events);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to retrieve events: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Get single event details for public event detail page (PUBLIC - no authentication required)
+     * GET /api/events/public/{eventId}
+     * @param eventId - The unique identifier of the event
+     */
+    @GetMapping("/public/{eventId}")
+    public ResponseEntity<?> getPublicEventById(@PathVariable String eventId) {
+        try {
+            System.out.println("Fetching event details for eventId: " + eventId);
+            // Get full event details
+            EventDetailDTO eventDetail = eventService.getEventDetailById(eventId);
+            System.out.println("Successfully fetched event: " + eventDetail.getTitle());
+            return ResponseEntity.ok(eventDetail);
+        } catch (RuntimeException e) {
+            System.err.println("Event not found: " + eventId + " - " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(createErrorResponse(e.getMessage()));
+        } catch (Exception e) {
+            System.err.println("Error fetching event: " + eventId + " - " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Failed to retrieve event details: " + e.getMessage()));
         }
     }
 

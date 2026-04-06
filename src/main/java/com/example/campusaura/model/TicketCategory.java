@@ -3,13 +3,15 @@ package com.example.campusaura.model;
 public class TicketCategory {
     private String categoryName;  // e.g., "Normal", "VIP", "VVIP"
     private Double price;
+    private Integer availableCount;  // Number of tickets available in this category
 
     public TicketCategory() {
     }
 
-    public TicketCategory(String categoryName, Double price) {
+    public TicketCategory(String categoryName, Double price, Integer availableCount) {
         this.categoryName = categoryName;
         this.price = price;
+        this.availableCount = availableCount;
     }
 
     public String getCategoryName() {
@@ -26,5 +28,13 @@ public class TicketCategory {
 
     public void setPrice(Double price) {
         this.price = price;
+    }
+
+    public Integer getAvailableCount() {
+        return availableCount;
+    }
+
+    public void setAvailableCount(Integer availableCount) {
+        this.availableCount = availableCount;
     }
 }

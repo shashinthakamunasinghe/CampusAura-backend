@@ -1,6 +1,6 @@
 package com.example.campusaura.controller;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.service.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -41,6 +41,25 @@ public class UserController {
         profile.put("role", user.getRole());
 
         return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * Get user by UID (typically for fetching role and basic info).
+     * Can be used by frontend to determine user permissions.
+     * @param uid Firebase UID
+     */
+    @GetMapping("/{uid}")
+    public ResponseEntity<Map<String, Object>> getUserByUid(@PathVariable String uid) {
+        User user = userService.getUserByUid(uid);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("uid", user.getUid());
+        response.put("email", user.getEmail());
+        response.put("name", user.getName());
+        response.put("role", user.getRole());
+        response.put("verified", user.isVerified());
+
+        return ResponseEntity.ok(response);
     }
 
     /**

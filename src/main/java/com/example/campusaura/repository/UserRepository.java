@@ -1,6 +1,6 @@
 package com.example.campusaura.repository;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 
 import java.util.Optional;
 

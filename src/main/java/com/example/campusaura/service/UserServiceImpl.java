@@ -1,6 +1,6 @@
-package com.example.campusaura.service.impl;
+package com.example.campusaura.service;
 
-import com.example.campusaura.model.entity.User;
+import com.example.campusaura.model.User;
 import com.example.campusaura.repository.UserRepository;
 import com.example.campusaura.security.Roles;
 import com.example.campusaura.service.UserService;

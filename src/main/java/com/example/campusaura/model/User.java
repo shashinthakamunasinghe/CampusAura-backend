@@ -1,4 +1,4 @@
-package com.example.campusaura.model.entity;
+package com.example.campusaura.model;
 
 import com.google.cloud.Timestamp;
 import lombok.AllArgsConstructor;

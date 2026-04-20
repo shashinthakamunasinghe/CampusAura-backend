@@ -2,6 +2,7 @@ package com.example.campusaura.config;
 
 import com.example.campusaura.security.FirebaseAuthFilter;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -24,6 +25,10 @@ import java.util.List;
 public class SecurityConfig {
 
   private final FirebaseAuthFilter firebaseAuthFilter;
+
+  // Injected from application.properties → driven by CORS_ALLOWED_ORIGINS env var
+  @Value("${cors.allowed-origins}")
+  private String corsAllowedOrigins;
 
   public SecurityConfig(FirebaseAuthFilter firebaseAuthFilter) {
     this.firebaseAuthFilter = firebaseAuthFilter;
@@ -69,16 +74,13 @@ public class SecurityConfig {
   public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration configuration = new CorsConfiguration();
 
-    // Allow your frontend URLs
-    configuration.setAllowedOrigins(Arrays.asList(
-        "http://localhost",         // Docker deployed frontend (Nginx on port 80)
-        "http://127.0.0.1",         // Localhost via IP
-        "http://localhost:5173",    // Vite frontend (default port)
-        "http://localhost:5174",    // Vite frontend (alternate port)
-        "http://localhost:5175"     // Vite frontend (alternate port)
-    ));
+    List<String> origins = Arrays.stream(corsAllowedOrigins.split(","))
+        .map(String::trim)
+        .filter(s -> !s.isEmpty())
+        .toList();
+    configuration.setAllowedOrigins(origins);
 
-    // Allow all HTTP methods
+    // Allow all standard HTTP methods
     configuration.setAllowedMethods(Arrays.asList(
         "GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"
     ));
@@ -86,7 +88,7 @@ public class SecurityConfig {
     // Allow all headers (including Authorization for Firebase tokens)
     configuration.setAllowedHeaders(List.of("*"));
 
-    // Allow credentials (cookies, authorization headers)
+    // Allow credentials (Authorization header for Firebase JWT)
     configuration.setAllowCredentials(true);
 
     // Cache preflight requests for 1 hour

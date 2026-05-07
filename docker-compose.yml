@@ -17,7 +17,7 @@ services:
       # Firebase service account 
       FIREBASE_SERVICE_ACCOUNT_KEY: /run/secrets/firebase-key
       # CORS:  
-      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:5174,http://localhost:5175
+      CORS_ALLOWED_ORIGINS: http://localhost:5173,http://localhost:5174,http://localhost:5175,https://campus-aura-frontend.vercel.app
     secrets:
       - firebase-key
     networks:

@@ -1,272 +1,128 @@
-# CampusAura Backend
+<h1 align="center">CampusAura Backend API</h1>
 
-CampusAura is an interactive web-based application that allows students to learn about future events, buy tickets, fund charitable efforts, browse products, and sell or buy items created by students - all in one combined system.
+<div align="center">
+  <img src="https://img.shields.io/badge/Java-17-ED8B00?style=for-the-badge&logo=openjdk&logoColor=white" alt="Java 17" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.0-6DB33F?style=for-the-badge&logo=spring&logoColor=white" alt="Spring Boot" />
+  <img src="https://img.shields.io/badge/Firebase-Admin-FFCA28?style=for-the-badge&logo=firebase&logoColor=black" alt="Firebase" />
+  <img src="https://img.shields.io/badge/Stripe-Payment-008CDD?style=for-the-badge&logo=stripe&logoColor=white" alt="Stripe" />
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker" />
+  <img src="https://img.shields.io/badge/Azure-Container_Apps-0089D6?style=for-the-badge&logo=microsoft-azure&logoColor=white" alt="Azure" />
+</div>
 
-This is the **Spring Boot backend** with Firebase Authentication, role-based access control, and Firestore integration.
+## 📌 Project Overview
 
-## 🚀 Features
+CampusAura is an enterprise-grade campus community platform designed to streamline event discovery, secure ticketing, fundraising, and a student-exclusive marketplace.
 
-- ✅ **Firebase Authentication Integration** - Secure JWT token validation
-- ✅ **Role-Based Access Control** - 4 roles (ADMIN, COORDINATOR, STUDENT, EXTERNAL_USER)
-- ✅ **Email Domain Validation** - Automatic role assignment based on university email
-- ✅ **Marketplace Access Control** - Business rule enforcement (EXTERNAL_USER cannot sell)
-- ✅ **Firestore Integration** - User data stored in Firestore
-- ✅ **Automatic User Sync** - Users created on first login
-- ✅ **RESTful API** - Clean, well-documented endpoints
-- ✅ **CORS Enabled** - Frontend integration ready
+This repository hosts the **Spring Boot Microservice/Backend API**, providing a robust, highly available, and secure foundation for the platform. Built with a focus on modern software engineering principles, the system leverages containerization, cloud-native deployments, and strict role-based access control (RBAC).
 
-## 📋 Prerequisites
-
-- Java 17 or higher
-- Maven 3.6+
-- Firebase project with Authentication and Firestore enabled
-- Firebase service account credentials
-
-## 🛠️ Setup
-
-### 1. Clone the Repository
-```bash
-git clone <repository-url>
-cd CampusAura-backend
-```
-
-### 2. Configure Firebase
-1. Place your `firebase-service-account.json` in `src/main/resources/`
-2. Update `application.properties`:
-```properties
-firebase.service-account-key=classpath:firebase-service-account.json
-firebase.database-url=https://your-project.firebaseio.com
-```
-
-### 3. Build and Run
-```bash
-# Using Maven wrapper (recommended)
-./mvnw.cmd spring-boot:run
-
-# Or using Maven
-mvn spring-boot:run
-```
-
-The server will start at `http://localhost:8080`
-
-## 📚 Documentation
-
-| Document | Description |
-|----------|-------------|
-| [AUTHENTICATION_GUIDE.md](docs/AUTHENTICATION_GUIDE.md) | Complete authentication flow and integration guide |
-| [API_REFERENCE.md](docs/API_REFERENCE.md) | API endpoints quick reference |
-| [AUTHENTICATION_FLOW_DIAGRAM.md](docs/AUTHENTICATION_FLOW_DIAGRAM.md) | Visual authentication flow diagrams |
-| [IMPLEMENTATION_SUMMARY.md](docs/IMPLEMENTATION_SUMMARY.md) | Implementation details and checklist |
-| [FIREBASE_AUTH_GUIDE.md](docs/FIREBASE_AUTH_GUIDE.md) | Firebase setup guide |
-
-## 🔐 Authentication
-
-### How It Works
-
-CampusAura uses **Firebase Authentication** on the frontend with backend token validation:
-
-1. **Frontend** (React/Angular) handles registration/login via Firebase SDK
-2. **Backend** validates tokens and manages roles/permissions
-3. Users are automatically created in Firestore on first authenticated request
-4. Roles are assigned based on email domain
-
-### Quick Example
-
-```javascript
-// Frontend - Register & Login
-import { auth } from './firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-
-// Register
-const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-const token = await userCredential.user.getIdToken();
-
-// Make API request
-fetch('http://localhost:8080/api/user/profile', {
-  headers: { 'Authorization': `Bearer ${token}` }
-});
-```
-
-## 🎯 Roles & Permissions
-
-| Role | Email Requirement | Can Sell Items | Access Level |
-|------|------------------|----------------|--------------|
-| **EXTERNAL_USER** | Any email | ❌ No | Limited - browse only |
-| **STUDENT** | @std.uwu.ac.lk | ✅ Yes | Full student features |
-| **COORDINATOR** | @std.uwu.ac.lk | ✅ Yes | Event management |
-| **ADMIN** | @std.uwu.ac.lk | ✅ Yes | Full system access |
-
-### Automatic Role Assignment
-
-```
-student@std.uwu.ac.lk → STUDENT role (can sell)
-john@gmail.com        → EXTERNAL_USER role (cannot sell)
-```
-
-## 🌐 API Endpoints
-
-### Public (No Authentication)
-```http
-POST /api/auth/validate-email
-GET  /api/auth/registration-info
-```
-
-### Authentication Required
-```http
-GET  /api/auth/session
-GET  /api/auth/verify
-POST /api/auth/logout
-
-GET  /api/user/profile
-GET  /api/user/me
-GET  /api/user/dashboard
-
-GET  /api/marketplace/items
-GET  /api/marketplace/can-sell
-POST /api/marketplace/sell        # STUDENT, COORDINATOR, ADMIN only
-POST /api/marketplace/buy
-
-PUT  /api/user/admin/users/{uid}/role  # ADMIN only
-```
-
-See [API_REFERENCE.md](docs/API_REFERENCE.md) for complete API documentation.
-
-## 🏗️ Project Structure
-
-```
-src/main/java/com/example/campusaura/
-├── config/
-│   ├── FirebaseConfig.java           # Firebase initialization
-│   └── SecurityConfig.java           # Spring Security config
-├── controller/
-│   ├── AuthController.java           # Authentication endpoints
-│   ├── UserController.java           # User management
-│   └── MarketplaceController.java    # Marketplace logic
-├── model/entity/
-│   └── User.java                     # User entity
-├── repository/
-│   ├── UserRepository.java
-│   └── impl/FirestoreUserRepository.java
-├── security/
-│   ├── FirebaseAuthFilter.java       # Token validation filter
-│   ├── FirebasePrincipal.java        # Custom principal
-│   └── Roles.java                    # Role constants
-├── service/
-│   ├── UserService.java
-│   └── impl/UserServiceImpl.java     # Role assignment logic
-└── util/
-    └── EmailValidator.java            # Email domain validation
-```
-
-## 🧪 Testing
-
-### Test with cURL
-```bash
-# Validate email (public endpoint)
-curl -X POST http://localhost:8080/api/auth/validate-email \
-  -H "Content-Type: application/json" \
-  -d '{"email": "student@std.uwu.ac.lk"}'
-
-# Get user profile (requires token)
-curl -X GET http://localhost:8080/api/user/profile \
-  -H "Authorization: Bearer <your-firebase-token>"
-```
-
-### Test Marketplace Access
-```bash
-# STUDENT can sell (succeeds)
-curl -X POST http://localhost:8080/api/marketplace/sell \
-  -H "Authorization: Bearer <student-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"itemName": "Laptop", "price": 50000}'
-
-# EXTERNAL_USER cannot sell (fails with 403)
-curl -X POST http://localhost:8080/api/marketplace/sell \
-  -H "Authorization: Bearer <external-token>" \
-  -H "Content-Type: application/json" \
-  -d '{"itemName": "Laptop", "price": 50000}'
-```
-
-## 🔒 Security Features
-
-- ✅ Firebase JWT token validation on every request
-- ✅ Role-based access control with `@PreAuthorize`
-- ✅ Email domain validation for protected roles
-- ✅ Defense-in-depth (multiple security layers)
-- ✅ CORS configuration for frontend
-- ✅ Stateless authentication (no server-side sessions)
-
-## 🎓 Email Domain Rules
-
-### University Email Required
-- **ADMIN** - University email required
-- **COORDINATOR** - University email required
-- **STUDENT** - University email required (auto-assigned)
-
-### Any Email Allowed
-- **EXTERNAL_USER** - Any valid email (auto-assigned for non-university emails)
-
-### Validation
-```java
-// Implemented in EmailValidator.java
-@std.uwu.ac.lk → Valid university email
-@gmail.com     → External email (valid but limited access)
-```
-
-## 🛒 Marketplace Business Rules
-
-### Selling Items
-- ❌ **EXTERNAL_USER** - Cannot sell items
-- ✅ **STUDENT** - Can sell items
-- ✅ **COORDINATOR** - Can sell items
-- ✅ **ADMIN** - Can sell items
-
-### Buying & Browsing
-- ✅ All authenticated users can browse and buy items
-
-## 🚀 Deployment
-
-### Production Configuration
-1. Update CORS origins in `SecurityConfig.java`
-2. Use environment variables for Firebase credentials
-3. Enable HTTPS
-4. Configure production database URL
-
-```properties
-# application-prod.properties
-firebase.service-account-key=${FIREBASE_CREDENTIALS}
-firebase.database-url=${FIREBASE_DATABASE_URL}
-```
-
-## 🐛 Troubleshooting
-
-### Issue: "Unauthorized" error
-**Solution**: Ensure token is valid and included in Authorization header
-
-### Issue: CORS errors
-**Solution**: Add your frontend URL to `SecurityConfig.java` CORS configuration
-
-### Issue: Role not updating
-**Solution**: User needs to refresh token (re-login) after role change
-
-### Issue: EXTERNAL_USER can't access anything
-**Solution**: EXTERNAL_USER can browse and buy, just cannot sell items
-
-## 📞 Support
-
-For questions and support, please refer to:
-- [AUTHENTICATION_GUIDE.md](docs/AUTHENTICATION_GUIDE.md) - Complete authentication documentation
-- [API_REFERENCE.md](docs/API_REFERENCE.md) - API endpoint reference
-- [FIREBASE_AUTH_GUIDE.md](docs/FIREBASE_AUTH_GUIDE.md) - Firebase setup
-
-## 📝 License
-
-[Add your license here]
-
-## ✨ Contributors
-
-[Add contributors here]
+🔗 **Live Frontend**: [campus-aura-frontend.vercel.app](https://campus-aura-frontend.vercel.app)  
+🔗 **Production API Endpoint**: [campusaura-backend.lemontree-0868690c.centralindia.azurecontainerapps.io](https://campusaura-backend.lemontree-0868690c.centralindia.azurecontainerapps.io)  
 
 ---
 
-**Built with Spring Boot, Firebase, and ❤️**
+## 🏗️ Architecture & Engineering Practices
+
+As a showcase of professional software engineering, this project implements the following practices:
+
+- **Layered Architecture (N-Tier)**: Strict separation of concerns across Controllers, Services, Repositories, and Security layers to ensure maintainability, scalability, and testability.
+- **RESTful API Design**: Predictable resource-oriented URIs, standardized HTTP methods, and unified JSON error handling with proper HTTP status codes.
+- **Stateless Authentication**: Leveraging Firebase JWTs for stateless, highly scalable API security without session overhead.
+- **Containerization**: Fully Dockerized environment ensuring parity across local development, CI/CD, and production.
+- **Cloud-Native Deployment**: Hosted on Microsoft Azure Container Apps for automatic scaling, load balancing, and high availability.
+- **Secure Secrets Management**: Environment variables and secure volume-mounted secrets are utilized instead of hardcoded credentials.
+
+---
+
+## 🚀 Key Features
+
+### Security & Identity Management
+- **Firebase Auth Integration**: Intercepts and validates JWTs via custom Spring Security filters.
+- **Dynamic Role-Based Access Control (RBAC)**: Supports `ADMIN`, `COORDINATOR`, `STUDENT`, and `EXTERNAL_USER` roles.
+- **Smart Domain Verification**: Automatically assigns roles based on the authenticated user's email domain (e.g., auto-promoting `@std.uwu.ac.lk` to `STUDENT`).
+
+### Core Business Domains
+- **Event & Ticketing Engine**: Securely manages event lifecycles. Integrated with **Stripe** for seamless ticket purchasing and payment workflows.
+- **Student Marketplace**: A peer-to-peer ecosystem with restricted access logic (only verified students can create listings).
+- **Fundraising Module**: Handles donation tracking and campaign management.
+
+### Cloud & Database
+- **Firestore Database**: NoSQL document store for highly flexible and fast read/write operations.
+- **File & Image Uploads**: Secure handling of multipart file uploads for event banners and marketplace product images.
+
+---
+
+## 🐳 Docker & Containerization
+
+The project is fully containerized, making it resilient, platform-agnostic, and easy to deploy.
+
+- **Dockerfile**: Optimized multi-stage build using a robust Linux base image (`Ubuntu Jammy`) to ensure native library compatibility (specifically resolving SIGSEGV issues with gRPC/Netty dependencies required by Firebase).
+- **Docker Compose**: Orchestrates local development, handling environment variable injection and secure credential mounting.
+
+```bash
+# Build the production-ready image locally
+docker build -t campusaura-backend .
+
+# Run the full stack locally with Docker Compose
+docker-compose up -d --build
+```
+
+---
+
+## ☁️ Deployment Pipeline (Azure)
+
+The backend is configured for continuous delivery and is currently deployed to **Microsoft Azure Container Apps** directly from the Azure Container Registry. 
+
+**Deployment Highlights:**
+1. **Continuous Integration**: Automated via GitHub Actions (`.github/workflows/deploy-backend.yml`).
+2. **Serverless Infrastructure**: Utilizes Azure Container Apps to minimize operational overhead while maximizing scalability to meet student traffic spikes.
+3. **Health Probes**: Integrated with Spring Boot Actuator to expose `/actuator/health` endpoints, allowing Azure to route traffic only to healthy container instances and gracefully manage container restarts.
+
+---
+
+## 💻 Tech Stack Summary
+
+| Category | Technologies |
+|---|---|
+| **Language & Framework** | Java 17, Spring Boot 3.x, Spring Security |
+| **Authentication & DB** | Firebase Authentication, Google Cloud Firestore |
+| **Payments** | Stripe API |
+| **Build & Tooling** | Maven, Git, GitHub Actions |
+| **DevOps & Cloud** | Docker, Docker Compose, Azure Container Apps, Azure Container Registry (ACR) |
+
+---
+
+## 🛠️ Local Development Guide
+
+### Prerequisites
+- Java 17+ & Maven 3.6+
+- Docker & Docker Desktop (Optional but recommended)
+- Firebase Service Account Key (`firebase-service-account.json`)
+
+### Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/sandaluruba/CampusAura-backend.git
+   cd CampusAura-backend
+   ```
+
+2. **Configure Secrets**
+   Place your `firebase-service-account.json` into the `src/main/resources/` directory.
+
+3. **Run via Maven**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+
+4. **Run via Docker**
+   Ensure the `docker-compose.yml` points to the correct secret path, then execute:
+   ```bash
+   docker-compose up -d
+   ```
+
+The server will initialize and bind to `http://localhost:8080`.
+
+---
+<div align="center">
+  <i>Developed to demonstrate robust, scalable, and modern Software Engineering principles.</i>
+</div>

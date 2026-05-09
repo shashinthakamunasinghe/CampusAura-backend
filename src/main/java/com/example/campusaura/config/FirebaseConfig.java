@@ -11,11 +11,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Base64;
 
 @Configuration
 @ConditionalOnProperty(name = "firebase.enabled", havingValue = "true", matchIfMissing = true)
@@ -58,9 +60,10 @@ public class FirebaseConfig {
     }
 
     /**
-     * Opens the Firebase service account key from either:
-     * 1. A classpath resource (local dev): "classpath:firebase-service-account.json"
-     * 2. An absolute file path (Docker secret): "/run/secrets/firebase-key"
+     * Opens the Firebase service account key from one of three sources:
+     * 1. Classpath resource (local dev):     "classpath:firebase-service-account.json"
+     * 2. Absolute file path (Docker secret): "/run/secrets/firebase-key"
+     * 3. Base64-encoded JSON (Azure / CI):   "base64:<base64-encoded-json>"
      */
     private InputStream openServiceAccountStream() throws IOException {
         if (serviceAccountKeyPath.startsWith("classpath:")) {
@@ -70,6 +73,11 @@ public class FirebaseConfig {
                 throw new IOException("Classpath resource not found: " + resourceName);
             }
             return stream;
+        } else if (serviceAccountKeyPath.startsWith("base64:")) {
+            // Base64-encoded JSON passed as environment variable (e.g. Azure Container Apps secret)
+            String encoded = serviceAccountKeyPath.substring("base64:".length());
+            byte[] decoded = Base64.getDecoder().decode(encoded.trim());
+            return new ByteArrayInputStream(decoded);
         } else {
             // Absolute file path (Docker secret mounted at /run/secrets/)
             if (!Files.exists(Paths.get(serviceAccountKeyPath))) {

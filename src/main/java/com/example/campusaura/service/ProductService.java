@@ -3,17 +3,23 @@ package com.example.campusaura.service;
 import com.example.campusaura.dto.ProductResponseDTO;
 import com.example.campusaura.model.Product;
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     @Autowired
     private Firestore firestore;
@@ -25,10 +31,16 @@ public class ProductService {
         ApiFuture<QuerySnapshot> future = firestore.collection(COLLECTION_NAME).get();
         List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-        return documents.stream()
-                .map(this::documentToProduct)
-                .map(this::productToDTO)
-                .collect(Collectors.toList());
+        List<ProductResponseDTO> result = new ArrayList<>();
+        for (QueryDocumentSnapshot doc : documents) {
+            try {
+                Product product = documentToProduct(doc);
+                result.add(productToDTO(product));
+            } catch (Exception e) {
+                logger.error("Skipping malformed product document '{}': {}", doc.getId(), e.getMessage());
+            }
+        }
+        return result;
     }
 
     // Get product by ID
@@ -72,15 +84,11 @@ public class ProductService {
             throw new RuntimeException("Product not found with id: " + id);
         }
 
-        Map<String, Object> updates = new HashMap<>();
-        updates.put("status", Product.ProductStatus.DELETED.toString());
-        updates.put("updatedAt", LocalDateTime.now().toString());
-
-        docRef.update(updates).get();
+        docRef.delete().get();
     }
 
-    // Hard delete product
-    public void hardDeleteProduct(String id) throws ExecutionException, InterruptedException {
+    // Soft delete product (marks as deleted without removing)
+    public void softDeleteProduct(String id) throws ExecutionException, InterruptedException {
         DocumentReference docRef = firestore.collection(COLLECTION_NAME).document(id);
         DocumentSnapshot document = docRef.get().get();
 
@@ -88,7 +96,11 @@ public class ProductService {
             throw new RuntimeException("Product not found with id: " + id);
         }
 
-        docRef.delete().get();
+        Map<String, Object> updates = new HashMap<>();
+        updates.put("status", Product.ProductStatus.DELETED.toString());
+        updates.put("updatedAt", LocalDateTime.now().toString());
+
+        docRef.update(updates).get();
     }
 
     // Helper methods
@@ -97,39 +109,64 @@ public class ProductService {
         product.setId(document.getId());
         product.setName(document.getString("name"));
         product.setDescription(document.getString("description"));
-        
+
         Double price = document.getDouble("price");
         if (price != null) {
             product.setPrice(price);
         }
-        
+
         product.setCategory(document.getString("category"));
         product.setImageUrl(document.getString("imageUrl"));
         product.setSellerId(document.getString("sellerId"));
         product.setSellerName(document.getString("sellerName"));
-        
+
+        // Parse status — handle unknown values gracefully
         String statusStr = document.getString("status");
         if (statusStr != null) {
-            // Convert to uppercase to handle both "active"/"ACTIVE" formats
-            product.setStatus(Product.ProductStatus.valueOf(statusStr.toUpperCase()));
+            try {
+                product.setStatus(Product.ProductStatus.valueOf(statusStr.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                logger.warn("Unknown product status '{}' for doc {}, defaulting to PENDING", statusStr, document.getId());
+                product.setStatus(Product.ProductStatus.PENDING);
+            }
         }
-        
-        String createdAtStr = document.getString("createdAt");
-        if (createdAtStr != null) {
-            product.setCreatedAt(LocalDateTime.parse(createdAtStr));
-        }
-        
-        String updatedAtStr = document.getString("updatedAt");
-        if (updatedAtStr != null) {
-            product.setUpdatedAt(LocalDateTime.parse(updatedAtStr));
-        }
-        
-        String soldAtStr = document.getString("soldAt");
-        if (soldAtStr != null) {
-            product.setSoldAt(LocalDateTime.parse(soldAtStr));
-        }
-        
+
+        // Parse createdAt — may be stored as Firestore Timestamp OR ISO string
+        product.setCreatedAt(parseDateTime(document, "createdAt"));
+        product.setUpdatedAt(parseDateTime(document, "updatedAt"));
+        product.setSoldAt(parseDateTime(document, "soldAt"));
+
         return product;
+    }
+
+    /**
+     * Safely parse a date/time field that may be stored as a Firestore Timestamp
+     * OR as an ISO-8601 string. Returns null if the field is absent or unparseable.
+     */
+    private LocalDateTime parseDateTime(DocumentSnapshot document, String field) {
+        // Try Firestore Timestamp first (most common when saved via Firebase SDK)
+        try {
+            Timestamp ts = document.getTimestamp(field);
+            if (ts != null) {
+                return ts.toDate().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDateTime();
+            }
+        } catch (Exception ignored) {
+            // Field exists but is not a Timestamp — fall through to String parsing
+        }
+
+        // Fallback: try as ISO-8601 string
+        try {
+            String str = document.getString(field);
+            if (str != null && !str.isEmpty()) {
+                return LocalDateTime.parse(str);
+            }
+        } catch (Exception e) {
+            logger.warn("Could not parse date field '{}' for doc {}: {}", field, document.getId(), e.getMessage());
+        }
+
+        return null;
     }
 
     private ProductResponseDTO productToDTO(Product product) {

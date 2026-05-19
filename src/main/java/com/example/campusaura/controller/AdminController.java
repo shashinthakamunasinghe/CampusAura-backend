@@ -36,6 +36,9 @@ public class AdminController {
     @Autowired
     private TransactionService transactionService;
 
+    @Autowired
+    private SalesService salesService;
+
     // ==================== DASHBOARD SECTION ====================
 
     /**
@@ -581,6 +584,36 @@ public class AdminController {
         try {
             List<TransactionResponseDTO> transactions = transactionService.getRecentTransactions(limit);
             return ResponseEntity.ok(transactions);
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    // ==================== SALES TRACKING SECTION ====================
+
+    /**
+     * Get all ticket sales
+     * GET /api/admin/sales/tickets
+     */
+    @GetMapping("/sales/tickets")
+    public ResponseEntity<List<TicketSaleDTO>> getAllTicketSales() {
+        try {
+            List<TicketSaleDTO> sales = salesService.getAllTicketSales();
+            return ResponseEntity.ok(sales);
+        } catch (ExecutionException | InterruptedException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    /**
+     * Get all product sales
+     * GET /api/admin/sales/products
+     */
+    @GetMapping("/sales/products")
+    public ResponseEntity<List<ProductSaleDTO>> getAllProductSales() {
+        try {
+            List<ProductSaleDTO> sales = salesService.getAllProductSales();
+            return ResponseEntity.ok(sales);
         } catch (ExecutionException | InterruptedException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.concurrent.ExecutionException;
 
 @RestController
@@ -43,9 +44,20 @@ public class FirestoreController {
     }
 
     @GetMapping("/{collection}")
-    public ResponseEntity<List<QueryDocumentSnapshot>> getAllDocuments(
+    public ResponseEntity<List<Map<String, Object>>> getAllDocuments(
             @PathVariable String collection) throws ExecutionException, InterruptedException {
         List<QueryDocumentSnapshot> documents = firestoreService.getAllDocuments(collection);
-        return ResponseEntity.ok(documents);
+        
+        // Convert QueryDocumentSnapshot objects to Maps for JSON serialization
+        List<Map<String, Object>> documentMaps = documents.stream()
+            .map(doc -> {
+                Map<String, Object> docData = doc.getData();
+                // Add document ID to the data map
+                docData.put("id", doc.getId());
+                return docData;
+            })
+            .collect(Collectors.toList());
+        
+        return ResponseEntity.ok(documentMaps);
     }
 }
